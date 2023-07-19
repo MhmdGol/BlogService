@@ -1,0 +1,5 @@
+I made a database with 3 tables,
+first one named posts as (id, title, text, ctime, mtime)
+second one named categories as (id, name)
+the last one is bridging table named posts_categories as (id, post_id, category_id)
+the last one is used for the many-to-many relationship between two tables.
