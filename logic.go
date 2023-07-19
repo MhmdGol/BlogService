@@ -3,7 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"net/http"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
@@ -36,4 +39,16 @@ func main() {
 	fmt.Println("Successfully connected!")
 	//=====================================
 
+	handleRequests()
+}
+
+func handleRequests() {
+	myRouter := mux.NewRouter().StrictSlash(true)
+
+	myRouter.HandleFunc("/", homePage)
+	log.Fatal(http.ListenAndServe(":8080", myRouter))
+}
+
+func homePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome!")
 }
