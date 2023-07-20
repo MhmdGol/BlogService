@@ -1,104 +1,81 @@
 package main
 
-// import (
-// 	"encoding/json"
-// 	"fmt"
-// 	"io/ioutil"
-// 	"net/http"
-// 	"strconv"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
 
-// 	"github.com/gorilla/mux"
-// )
+	"github.com/gorilla/mux"
+)
 
-// func createNewCategory(w http.ResponseWriter, r *http.Request) {
-// 	sqlQuery := `INSERT INTO categories (name) VALUES ($1)`
+func createNewCategory(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
 
-// 	reqBody, _ := ioutil.ReadAll(r.Body)
+	var category Category
+	err := json.Unmarshal(reqBody, &category)
+	if err != nil {
+		panic(err)
+	}
 
-// 	var category Category
-// 	json.Unmarshal(reqBody, &category)
+	db.Create(&category)
+	fmt.Fprintf(w, "Category inserted successfully!")
+}
 
-// 	_, err = db.Exec(sqlQuery, category.Name)
-// 	if err != nil {
-// 		panic(err)
-// 	}
+func readAllCategories(w http.ResponseWriter, r *http.Request) {
+	var allCategories []Category
 
-// 	fmt.Fprintf(w, "Category successfully inserted")
-// }
+	db.Find(&allCategories)
+	json.NewEncoder(w).Encode(allCategories)
+}
 
-// func readAllCategories(w http.ResponseWriter, r *http.Request) {
-// 	sqlQuery := `SELECT name FROM categories`
+func readACategory(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key, _ := strconv.Atoi(vars["id"])
 
-// 	rows, err := db.Query(sqlQuery)
+	var category Category
+	db.First(&category, key)
 
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	defer rows.Close()
+	if category.ID == 0 {
+		fmt.Fprintf(w, "Category not found!")
+	} else {
+		json.NewEncoder(w).Encode(category)
+	}
 
-// 	var categories []Category
-// 	for rows.Next() {
-// 		var category Category
-// 		err = rows.Scan(&category.Name)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		categories = append(categories, category)
-// 	}
-// 	json.NewEncoder(w).Encode(categories)
-// }
+}
 
-// func readACategory(w http.ResponseWriter, r *http.Request) {
-// 	sqlQuery := `SELECT name FROM categories WHERE id=$1`
+func updateCategory(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key, _ := strconv.Atoi(vars["id"])
+	reqBody, _ := ioutil.ReadAll(r.Body)
 
-// 	vars := mux.Vars(r)
-// 	key, _ := strconv.Atoi(vars["id"])
-// 	rows, err := db.Query(sqlQuery, key)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	defer rows.Close()
+	var updatedCategory Category
+	json.Unmarshal(reqBody, &updatedCategory)
 
-// 	var category Category
-// 	rows.Next()
-// 	err = rows.Scan(&category.Name)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	json.NewEncoder(w).Encode(category)
-// }
+	var foundCategory Category
+	db.First(&foundCategory, key)
 
-// func updateCategory(w http.ResponseWriter, r *http.Request) {
-// 	sqlQuery := `
-// 		UPDATE categories
-// 		SET name=$1
-// 		WHERE id=$2
-// 	`
-// 	reqBody, _ := ioutil.ReadAll(r.Body)
-// 	var category Category
-// 	json.Unmarshal(reqBody, &category)
+	if foundCategory.ID == 0 {
+		fmt.Fprintf(w, "Category not found!")
+	} else {
+		foundCategory.Name = updatedCategory.Name
+		db.Save(&foundCategory)
+		fmt.Fprintf(w, "Category updated successfully!")
+	}
+}
 
-// 	vars := mux.Vars(r)
-// 	key, _ := strconv.Atoi(vars["id"])
+func deleteCategory(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key, _ := strconv.Atoi(vars["id"])
 
-// 	_, err := db.Exec(sqlQuery, category.Name, key)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	fmt.Fprintf(w, "Categories successfully updated")
-// }
+	var category Category
+	db.First(&category, key)
 
-// func deleteCategory(w http.ResponseWriter, r *http.Request) {
-// 	sqlQuery := `
-// 		DELETE FROM categories WHERE id=$1
-// 	`
-// 	vars := mux.Vars(r)
-// 	key, _ := strconv.Atoi(vars["id"])
-
-// 	_, err := db.Exec(sqlQuery, key)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	fmt.Fprintf(w, "Categories successfully deleted")
-// }
+	if category.ID == 0 {
+		fmt.Fprintf(w, "Category not found!")
+	} else {
+		db.Delete(&category)
+		fmt.Fprintf(w, "Category deleted successfully!")
+	}
+}
