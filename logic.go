@@ -1,16 +1,18 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-var db *sql.DB
+var db *gorm.DB
 var err error
 
 const (
@@ -21,23 +23,38 @@ const (
 	dbname   = "blog_service"
 )
 
+type Category struct {
+	gorm.Model
+	Name  string
+	Posts []*Post `gorm:"many2many:post_categories;"`
+}
+
+type Post struct {
+	gorm.Model
+	Title             string
+	Text              string
+	Creation_time     time.Time
+	Modification_time time.Time
+	Categories        []*Category `gorm:"many2many:post_categories;"`
+}
+
 func main() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	db, err = sql.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	err = db.Ping()
+	// Open the connection to the database
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("Successfully connected!")
 	//=====================================
+
+	err = db.AutoMigrate(&Category{}, &Post{})
+	if err != nil {
+		panic(err)
+	}
 
 	handleRequests()
 }
@@ -46,13 +63,13 @@ func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 
 	myRouter.HandleFunc("/", homePage)
-	myRouter.HandleFunc("/post/create", createNewPost).Methods("POST")
+	// myRouter.HandleFunc("/post/create", createNewPost).Methods("POST")
 
-	myRouter.HandleFunc("/category/create", createNewCategory).Methods("POST")
-	myRouter.HandleFunc("/category/read", readAllCategories).Methods("GET")
-	myRouter.HandleFunc("/category/read/{id}", readACategory).Methods("GET")
-	myRouter.HandleFunc("/category/update/{id}", updateCategory).Methods("PUT")
-	myRouter.HandleFunc("/category/delete/{id}", deleteCategory).Methods("DELETE")
+	// myRouter.HandleFunc("/category/create", createNewCategory).Methods("POST")
+	// myRouter.HandleFunc("/category/read", readAllCategories).Methods("GET")
+	// myRouter.HandleFunc("/category/read/{id}", readACategory).Methods("GET")
+	// myRouter.HandleFunc("/category/update/{id}", updateCategory).Methods("PUT")
+	// myRouter.HandleFunc("/category/delete/{id}", deleteCategory).Methods("DELETE")
 
 	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
