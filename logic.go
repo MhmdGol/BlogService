@@ -46,6 +46,8 @@ func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 
 	myRouter.HandleFunc("/", homePage)
+	myRouter.HandleFunc("/post/create", createNewPost).Methods("POST")
+
 	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
 
