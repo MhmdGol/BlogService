@@ -62,13 +62,13 @@ func handleRequests() {
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/post/create", createNewPost).Methods("POST")
 	myRouter.HandleFunc("/post/read", readAllPosts).Methods("GET")
-	myRouter.HandleFunc("/post/read/{id}", readAPost).Methods("GET")
+	myRouter.HandleFunc("/post/read/{id}", readPostByPaging).Methods("GET")
 	myRouter.HandleFunc("/post/update/{id}", updatePost).Methods("PUT")
 	myRouter.HandleFunc("/post/delete/{id}", deletePost).Methods("DELETE")
 
 	myRouter.HandleFunc("/category/create", createNewCategory).Methods("POST")
 	myRouter.HandleFunc("/category/read", readAllCategories).Methods("GET")
-	myRouter.HandleFunc("/category/read/{id}", readACategory).Methods("GET")
+	// myRouter.HandleFunc("/category/read/{id}", readACategory).Methods("GET")
 	myRouter.HandleFunc("/category/update/{id}", updateCategory).Methods("PUT")
 	myRouter.HandleFunc("/category/delete/{id}", deleteCategory).Methods("DELETE")
 

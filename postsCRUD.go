@@ -16,6 +16,10 @@ type DataPost struct {
 	Cats  []string `json:"cats"`
 }
 
+type PageSize struct {
+	Size int `json:"size"`
+}
+
 func createNewPost(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
 
@@ -76,13 +80,23 @@ func readAllPosts(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(allPosts)
 }
 
-func readAPost(w http.ResponseWriter, r *http.Request) {
+func readPostByPaging(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	key, _ := strconv.Atoi(vars["id"])
+	page, _ := strconv.Atoi(vars["id"])
+	if page < 1 {
+		panic("paging starts at 1")
+	}
 
-	var post Post
-	db.Preload("Categories").Where("id = ?", key).First(&post)
-	json.NewEncoder(w).Encode(post)
+	var pageSize PageSize
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(reqBody, &pageSize)
+
+	// sorting posts by their update_at
+	// then reading a portion of them
+	var posts []Post
+	db.Order("updated_at desc").Offset((page - 1) * pageSize.Size).Limit(pageSize.Size).Find(&posts)
+
+	json.NewEncoder(w).Encode(posts)
 }
 
 func updatePost(w http.ResponseWriter, r *http.Request) {

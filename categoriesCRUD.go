@@ -30,20 +30,19 @@ func readAllCategories(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(allCategories)
 }
 
-func readACategory(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	key, _ := strconv.Atoi(vars["id"])
+// func readACategory(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	key, _ := strconv.Atoi(vars["id"])
 
-	var category Category
-	db.First(&category, key)
+// 	var category Category
+// 	db.First(&category, key)
 
-	if category.ID == 0 {
-		fmt.Fprintf(w, "Category not found!")
-	} else {
-		json.NewEncoder(w).Encode(category)
-	}
-
-}
+// 	if category.ID == 0 {
+// 		fmt.Fprintf(w, "Category not found!")
+// 	} else {
+// 		json.NewEncoder(w).Encode(category)
+// 	}
+// }
 
 func updateCategory(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
