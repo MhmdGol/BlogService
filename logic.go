@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -25,17 +24,15 @@ const (
 
 type Category struct {
 	gorm.Model
-	Name  string
+	Name  string  `json:"name"`
 	Posts []*Post `gorm:"many2many:post_categories;"`
 }
 
 type Post struct {
 	gorm.Model
-	Title             string
-	Text              string
-	Creation_time     time.Time
-	Modification_time time.Time
-	Categories        []*Category `gorm:"many2many:post_categories;"`
+	Title      string      `json:"title"`
+	Text       string      `json:"text"`
+	Categories []*Category `json:"cats" gorm:"many2many:post_categories;"`
 }
 
 func main() {
@@ -63,7 +60,11 @@ func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 
 	myRouter.HandleFunc("/", homePage)
-	// myRouter.HandleFunc("/post/create", createNewPost).Methods("POST")
+	myRouter.HandleFunc("/post/create", createNewPost).Methods("POST")
+	myRouter.HandleFunc("/post/read", readAllPosts).Methods("GET")
+	myRouter.HandleFunc("/post/read/{id}", readAPost).Methods("GET")
+	myRouter.HandleFunc("/post/update/{id}", updatePost).Methods("PUT")
+	myRouter.HandleFunc("/post/delete/{id}", deletePost).Methods("DELETE")
 
 	myRouter.HandleFunc("/category/create", createNewCategory).Methods("POST")
 	myRouter.HandleFunc("/category/read", readAllCategories).Methods("GET")
