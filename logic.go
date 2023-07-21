@@ -1,10 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
@@ -13,6 +17,7 @@ import (
 
 var db *gorm.DB
 var err error
+var secretKey = []byte("Blogloglog")
 
 const (
 	host     = "localhost"
@@ -60,6 +65,8 @@ func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 
 	myRouter.HandleFunc("/", homePage)
+	myRouter.HandleFunc("/login", loginHandler).Methods("POST")
+
 	myRouter.HandleFunc("/post/create", createNewPost).Methods("POST")
 	myRouter.HandleFunc("/post/read", readAllPosts).Methods("GET")
 	myRouter.HandleFunc("/post/read/{id}", readPostByPaging).Methods("GET")
@@ -77,4 +84,66 @@ func handleRequests() {
 
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome!")
+}
+
+type User struct {
+	ID       int
+	Username string `json:"user"`
+	Password string `json:"pass"`
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	// ------ Hardcoded user ------
+	allowedUser := User{
+		ID:       1,
+		Username: "Mhmd",
+		Password: "1234",
+	}
+	// ----------------------------
+
+	// login check
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	var user User
+	json.Unmarshal(reqBody, &user)
+
+	if user.Username != allowedUser.Username || user.Password != allowedUser.Password {
+		fmt.Fprintf(w, "Not Authenticated!")
+		return
+	}
+
+	// here we generate a token for the user
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id":   user.ID,
+		"username":  user.Username,
+		"expiresAt": time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	tokenString, err := token.SignedString(secretKey)
+	if err != nil {
+		panic(err)
+	}
+
+	// give the token to the user
+	w.Write([]byte(tokenString))
+}
+
+func checkAuthentication(r *http.Request) bool {
+	tokenString := r.Header.Get("Authorization")
+	if tokenString == "" {
+		return false
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	})
+
+	if err != nil {
+		return false
+	}
+
+	if !token.Valid {
+		return false
+	}
+
+	return true
 }

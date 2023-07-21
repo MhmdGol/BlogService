@@ -11,6 +11,11 @@ import (
 )
 
 func createNewCategory(w http.ResponseWriter, r *http.Request) {
+	if !checkAuthentication(r) {
+		fmt.Fprintf(w, "Not allowed!")
+		return
+	}
+
 	reqBody, _ := ioutil.ReadAll(r.Body)
 
 	var category Category
@@ -45,6 +50,11 @@ func readAllCategories(w http.ResponseWriter, r *http.Request) {
 // }
 
 func updateCategory(w http.ResponseWriter, r *http.Request) {
+	if !checkAuthentication(r) {
+		fmt.Fprintf(w, "Not allowed!")
+		return
+	}
+
 	vars := mux.Vars(r)
 	key, _ := strconv.Atoi(vars["id"])
 	reqBody, _ := ioutil.ReadAll(r.Body)
@@ -65,6 +75,11 @@ func updateCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteCategory(w http.ResponseWriter, r *http.Request) {
+	if !checkAuthentication(r) {
+		fmt.Fprintf(w, "Not allowed!")
+		return
+	}
+
 	vars := mux.Vars(r)
 	key, _ := strconv.Atoi(vars["id"])
 

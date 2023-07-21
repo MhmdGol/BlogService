@@ -21,6 +21,11 @@ type PageSize struct {
 }
 
 func createNewPost(w http.ResponseWriter, r *http.Request) {
+	if !checkAuthentication(r) {
+		fmt.Fprintf(w, "Not allowed!")
+		return
+	}
+
 	reqBody, _ := ioutil.ReadAll(r.Body)
 
 	var datapost DataPost
@@ -100,6 +105,11 @@ func readPostByPaging(w http.ResponseWriter, r *http.Request) {
 }
 
 func updatePost(w http.ResponseWriter, r *http.Request) {
+	if !checkAuthentication(r) {
+		fmt.Fprintf(w, "Not allowed!")
+		return
+	}
+
 	// placing currently present post to postToUpdate
 	vars := mux.Vars(r)
 	key, _ := strconv.Atoi(vars["id"])
@@ -145,6 +155,11 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func deletePost(w http.ResponseWriter, r *http.Request) {
+	if !checkAuthentication(r) {
+		fmt.Fprintf(w, "Not allowed!")
+		return
+	}
+
 	vars := mux.Vars(r)
 	key, _ := strconv.Atoi(vars["id"])
 
